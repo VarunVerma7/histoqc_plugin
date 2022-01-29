@@ -55,7 +55,7 @@ def query_slide(gc, slide_id, parentId, verbose=True):
 
             print(f"{input_directory}")
 
-            subprocess.call(
+            subprocess.run(
                 f"python3 -m histoqc {input_directory} -o {tmpdir}/outputs --force",
                 shell=True,
             )
@@ -64,7 +64,7 @@ def query_slide(gc, slide_id, parentId, verbose=True):
             print(f"Meta Data response dictionary {metadata_response_dict}")
 
             gc.addMetadataToItem(slide_id, metadata_response_dict)
-            gc.upload(f"..{tmpdir}/{slide_id}", parentId)
+            gc.upload(f"{tmpdir}/{slide_id}", parentId)
 
             print("Uploading completed!")
 
