@@ -5,6 +5,9 @@ import tempfile
 import subprocess
 import numpy as np
 import imageio
+from datetime import datetime
+import logging
+import sys
 
 
 def descend_folder(gc, folder_id, verbose=True):
@@ -32,9 +35,9 @@ def query_slide(gc, slide_id, parentId, verbose=True):
     with tempfile.TemporaryDirectory() as tmpdir:
         gc.downloadItem(slide_id, tmpdir)
 
-        print("LISTING directory after download ", os.listdir(tmpdir))
+        logging.debug("LISTING directory after download ", os.listdir(tmpdir))
 
-        print("ABSOLUTE PATH AFTER DOWNLOAD ", os.path.abspath(tmpdir))
+        logging.debug("ABSOLUTE PATH AFTER DOWNLOAD ", os.path.abspath(tmpdir))
 
         item = gc.getItem(slide_id)
         item_name = item.get("name", "None")
@@ -44,16 +47,16 @@ def query_slide(gc, slide_id, parentId, verbose=True):
 
         _, extension = os.path.splitext(item_name)
 
-        print(f"EXTENSION IS {extension} ITEM NAME IS {item_name}")
+        logging.debug(f"EXTENSION IS {extension} ITEM NAME IS {item_name}")
 
         if extension in supported_extensions:
-            print("Extension found in supported extensions")
+            logging.debug("Extension found in supported extensions")
             os.chdir("../HistoQC")
 
-            print(f"THIS IS THE TMP DIR {tmpdir}")
+            logging.debug(f"THIS IS THE TMP DIR {tmpdir}")
             input_directory = f"{tmpdir}/{item_name}"
 
-            print(f"{input_directory}")
+            logging.debug(f"{input_directory}")
 
             subprocess.run(
                 f"python3 -m histoqc {input_directory} -o {tmpdir}/outputs --force",
@@ -61,15 +64,15 @@ def query_slide(gc, slide_id, parentId, verbose=True):
             )
             metadata_response_dict = process_image(tmpdir, item_name)
 
-            print(f"Meta Data response dictionary {metadata_response_dict}")
+            logging.debug(f"Meta Data response dictionary {metadata_response_dict}")
 
             gc.addMetadataToItem(slide_id, metadata_response_dict)
             gc.upload(f"{tmpdir}/{slide_id}", parentId)
 
-            print("Uploading completed!")
+            logging.debug("Uploading completed!")
 
         else:
-            print(f"File type not supported with item name of {item_name}")
+            logging.debug(f"File type not supported with item name of {item_name}")
 
     return
 
@@ -80,7 +83,7 @@ def process_image(tmp_directory, item_name):
             f"{tmp_directory}/outputs/{item_name}/{item_name}_mask_use.png"
         )
 
-        print("Successfully read in final_mask")
+        logging.debug("Successfully read in final_mask")
 
         final_mask_np_flattened = np.array(final_mask).flatten()
 
@@ -94,10 +97,12 @@ def process_image(tmp_directory, item_name):
                 "thresholded": threshold_num,
                 "percentage": good_count / (good_count + bad_count),
                 "fileprocessed": item_name,
+                "timeprocessed": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+                "config": "default",
             }
         }
     except Exception as Ex:
-        print("Exception in processing", Ex)
+        logging.debug("Exception in processing", Ex)
         return {"histoqc_metadata": {"process": "failed"}}
 
     return final_response
@@ -107,6 +112,20 @@ def parse_dir_input(directory):
     # Parses girder ID out of directory argument passed to CLI
 
     return directory.split(os.sep)[4]
+
+
+def configureLogger():
+    root = logging.getLogger()
+
+    root.setLevel(logging.DEBUG)
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    handler.setFormatter(formatter)
+    root.addHandler(handler)
 
 
 def main(args):
@@ -121,18 +140,20 @@ def main(args):
     # #descend recursively into folders and analyze each slide within
     # descend_folder(gc, parse_dir_input(args.directory))
 
-    print("START OF MAIN")
+    configureLogger()
 
-    print("ALL ARGS ", args)
+    logging.debug("START OF MAIN")
+
+    logging.debug("ALL ARGS ", args)
     gc = girder_client.GirderClient(apiUrl=args.girderApiUrl)
     folder_id = "61dd35ab5ef164ec2f932d36"
 
     # use API key instead
     gc.authenticate("admin", "password")
-    print("WE AUTHENTICATED")
+    logging.debug("WE AUTHENTICATED")
     gc.inheritAccessControlRecursive("61dd35ab5ef164ec2f932d36")
 
-    print("MAIN METHOD ENDED")
+    logging.debug("MAIN METHOD ENDED")
     descend_folder(gc, parse_dir_input(args.directory))
 
 
