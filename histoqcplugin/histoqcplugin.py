@@ -149,11 +149,9 @@ def main(args):
     folder_id = "61dd35ab5ef164ec2f932d36"
 
     # use API key instead
-    gc.authenticate("admin", "password")
+    gc.authenticate(apiKey=args.girderApiKey)
     logging.debug("WE AUTHENTICATED")
-    gc.inheritAccessControlRecursive("61dd35ab5ef164ec2f932d36")
 
-    logging.debug("MAIN METHOD ENDED")
     descend_folder(gc, parse_dir_input(args.directory))
 
 

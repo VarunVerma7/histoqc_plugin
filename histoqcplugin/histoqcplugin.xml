@@ -31,10 +31,10 @@
       <default></default>
     </string>
     <string>
-      <name>girderToken</name>
-      <longflag>girder-token</longflag>
-      <label>Girder Token</label>
-      <description>A Girder token</description>
+      <name>girderApiKey</name>
+      <longflag>girder-api-key</longflag>
+      <label>Girder API Key</label>
+      <description>A Girder API Key</description>
       <default></default>
     </string>
   </parameters>  
