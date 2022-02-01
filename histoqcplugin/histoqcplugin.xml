@@ -18,6 +18,13 @@
       <label>Input directory</label>
       <channel>input</channel>
     </directory>
+      <region>
+      <name>analysis_roi</name>
+      <label>Analysis ROI</label>
+      <description>Region of interest within which the analysis should be done. Must be a four element vector in the format "left, top, width, height" in the space of the base layer. Default value of "-1, -1, -1, -1" indicates that the whole image should be processed.</description>
+      <longflag>analysis_roi</longflag>
+      <default>-1,-1,-1,-1</default>
+    </region>
   </parameters>
   <!--Setting advanced to true hides these parameters initially - they are automatically populated based on current system and login.-->
   <parameters advanced="true">
