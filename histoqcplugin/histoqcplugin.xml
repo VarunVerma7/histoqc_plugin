@@ -25,6 +25,13 @@
       <longflag>analysis_roi</longflag>
       <default>-1,-1,-1,-1</default>
     </region>
+    <double>
+      <name>analysis_mag</name>
+      <label>Analysis Magnification</label>
+      <description>The magnification at which the analysis should be performed.</description>
+      <longflag>analysis_mag</longflag>
+      <default>20</default>
+    </double>
   </parameters>
   <!--Setting advanced to true hides these parameters initially - they are automatically populated based on current system and login.-->
   <parameters advanced="true">
