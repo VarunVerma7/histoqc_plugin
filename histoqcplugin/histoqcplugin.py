@@ -8,6 +8,7 @@ import imageio
 from datetime import datetime
 import logging
 import sys
+import requests
 
 
 def descend_folder(gc, folder_id, verbose=True):
@@ -42,6 +43,15 @@ def query_slide(gc, slide_id, parentId, verbose=True):
         item = gc.getItem(slide_id)
         item_name = item.get("name", "None")
         gc.downloadItem(slide_id, tmpdir)
+
+        response = requests.get(
+            f"http://localhost:8080/api/v1/item/{slide_id}/tiles/internal_metadata"
+        )
+
+        content = response.json()
+        mag_metadata = content.get("openslide", None).get("aperio.AppMag", None)
+
+        mpp_metadata = content.get("openslide", None).get("aperio.MPP", None)
 
         # path is histoqc/tmpdir/itemname
 
@@ -146,7 +156,6 @@ def main(args):
 
     logging.debug("ALL ARGS ", args)
     gc = girder_client.GirderClient(apiUrl=args.girderApiUrl)
-    folder_id = "61dd35ab5ef164ec2f932d36"
 
     # use API key instead
     gc.authenticate(apiKey=args.girderApiKey)
