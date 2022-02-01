@@ -11,13 +11,14 @@
   <parameters>
     <label>Directory parameter</label>
     <description><![CDATA[Parameters that describe files and direcories.]]></description>
-    <directory>
-      <name>directory</name>
-      <longflag>directory</longflag>
-      <description><![CDATA[An input directory. If no default is specified, the current directory is used.]]></description>
-      <label>Input directory</label>
+
+      <image>
+      <name>inputImageFile</name>
+      <label>Input Image</label>
+      <description>Input image</description>
       <channel>input</channel>
-    </directory>
+      <index>0</index>
+    </image>
       <region>
       <name>analysis_roi</name>
       <label>Analysis ROI</label>
@@ -30,7 +31,7 @@
       <label>Analysis Magnification</label>
       <description>The magnification at which the analysis should be performed.</description>
       <longflag>analysis_mag</longflag>
-      <default>20</default>
+      <default>1.25</default>
     </double>
   </parameters>
   <!--Setting advanced to true hides these parameters initially - they are automatically populated based on current system and login.-->
@@ -51,5 +52,12 @@
       <description>A Girder API Key</description>
       <default></default>
     </string>
-  </parameters>  
+  </parameters> 
+      <directory>
+      <name>directory</name>
+      <longflag>directory</longflag>
+      <description><![CDATA[An input directory. If no default is specified, the current directory is used.]]></description>
+      <label>Input directory</label>
+      <channel>input</channel>
+    </directory> 
 </executable>
