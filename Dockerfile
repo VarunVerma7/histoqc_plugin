@@ -12,7 +12,7 @@ RUN apt update && apt install -y openslide-tools
 RUN pip install numpy --upgrade
 
 RUN pip install imageio
-
+RUN pip install large-image
 
 
 
