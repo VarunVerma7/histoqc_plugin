@@ -10,9 +10,11 @@ import logging
 import sys
 import requests
 import large_image
+import json
+import imageio
 
 
-def query_slide(gc, inputImageFile=None):
+def query_slide(gc, inputImageFile, outputAnnotationFile, outputStainImageFile_1):
 
     # Download folder or download item?
 
@@ -32,9 +34,30 @@ def query_slide(gc, inputImageFile=None):
                 f"python3 -m histoqc {inputImageFile} -o {tmpdir}/outputs --force",
                 shell=True,
             )
-            metadata_response_dict = process_image(tmpdir, (name + extension))
+            metadata_response_dict = process_image(
+                tmpdir, (name + extension), outputStainImageFile_1
+            )
 
             print(f"Meta Data response dictionary {metadata_response_dict}")
+            annotation = [
+                {
+                    "name": "Final Mask",
+                    "description": "Binary Mask",
+                    "elements": [
+                        {
+                            "type": "image",
+                            "girderId": "outputStainImageFile_1",
+                            "transform": {
+                                "xoffset": 0,
+                                "yoffset": 0,
+                            },
+                        }
+                    ],
+                }
+            ]
+
+            with open(outputAnnotationFile, "w") as annotation_file:
+                json.dump(annotation, annotation_file, indent=2, sort_keys=False)
 
             # gc.addMetadataToItem(slide_id, metadata_response_dict)
             # gc.upload(f"{tmpdir}/{slide_id}", parentId)
@@ -47,30 +70,27 @@ def query_slide(gc, inputImageFile=None):
     return
 
 
-def process_image(tmp_directory, item_name):
+def process_image(tmp_directory, item_name, outputStainImageFile_1):
     try:
         final_mask = imageio.imread(
             f"{tmp_directory}/outputs/{item_name}/{item_name}_mask_use.png"
         )
 
-        print("Successfully read in final_mask")
+        print(f"FINAL MASK SHAPE {final_mask.shape}")
 
-        final_mask_np_flattened = np.array(final_mask).flatten()
+        imageio.imsave(f"{outputStainImageFile_1}.svs", final_mask[:, :, 0])
 
-        good_count = np.sum(final_mask_np_flattened > 0)
-        bad_count = np.sum(final_mask_np_flattened == 0)
-
-        threshold_num = 1 if bool(good_count / (good_count + bad_count) >= 0.5) else 0
+        print(os.listdir())
+        print("SUCCESSFULLY SAVED")
 
         final_response = {
             "histoqc_metadata": {
-                "thresholded": threshold_num,
-                "percentage": good_count / (good_count + bad_count),
                 "fileprocessed": item_name,
                 "timeprocessed": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
                 "config": "default",
             }
         }
+        return final_response
     except Exception as Ex:
         print("Exception in processing", Ex)
         return {"histoqc_metadata": {"process": "failed"}}
@@ -93,10 +113,14 @@ def main(args):
     # configureLogger()
     print("ALL ARGS ", args)
     print("INPUT FILE ", args.inputImageFile)
+    print("OUTPUT ANNOTATION FILE ", args.outputAnnotationFile)
+    print("OUTPUT STAIN IMAGE FILE 1 ", args.outputStainImageFile_1)
     gc = girder_client.GirderClient(apiUrl=args.girderApiUrl)
     gc.authenticate(apiKey=args.girderApiKey)
     print("WE AUTHENTICATED")
-    query_slide(gc, args.inputImageFile)
+    query_slide(
+        gc, args.inputImageFile, args.outputAnnotationFile, args.outputStainImageFile_1
+    )
 
 
 if __name__ == "__main__":

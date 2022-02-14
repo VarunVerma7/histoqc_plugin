@@ -31,6 +31,7 @@
       <description>A Girder API URL (e.g., https://girder.example.com:443/api/v1)</description>
       <default></default>
     </string>
+
     <string>
       <name>girderApiKey</name>
       <longflag>girder-api-key</longflag>
@@ -38,6 +39,22 @@
       <description>A Girder API Key</description>
       <default></default>
     </string>
+
+    <image fileExtensions=".png" reference="inputImageFile">
+      <name>outputStainImageFile_1</name>
+      <label>Output Image of Stain 1</label>
+      <description>Output Image of Stain 1 (*.png)</description>
+      <channel>output</channel>
+      <index>1</index>
+    </image>
+
+    <file fileExtensions=".anot" reference="inputImageFile">
+      <name>outputAnnotationFile</name>
+      <label>Image Annotation</label>
+      <description>Annotation to relate images on source (*.anot)</description>
+      <channel>output</channel>
+      <longflag>image_annotation</longflag>
+    </file>
 
   </parameters>
   <!--Setting advanced to true hides these parameters initially - they are automatically populated based on current system and login.-->
