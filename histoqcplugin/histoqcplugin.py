@@ -6,18 +6,15 @@ import subprocess
 import numpy as np
 import imageio
 from datetime import datetime
-import logging
-import sys
-import requests
-import large_image
 import json
 import imageio
+from PIL import Image
 
 
 def query_slide(gc, inputImageFile, outputAnnotationFile, outputStainImageFile_1):
 
     # Download folder or download item?
-
+    print("OUTPUT STAIN IMAGE IN QUERY SLIDE ", outputStainImageFile_1)
     supported_extensions = [".svs", ".tif", ".tiff" ".svslide", ".scn", ".vmu"]
     print(f"Input image file in query ", inputImageFile)
     name, extension = os.path.splitext(os.path.basename(inputImageFile))
@@ -34,30 +31,31 @@ def query_slide(gc, inputImageFile, outputAnnotationFile, outputStainImageFile_1
                 f"python3 -m histoqc {inputImageFile} -o {tmpdir}/outputs --force",
                 shell=True,
             )
+
             metadata_response_dict = process_image(
                 tmpdir, (name + extension), outputStainImageFile_1
             )
 
             print(f"Meta Data response dictionary {metadata_response_dict}")
-            annotation = [
-                {
-                    "name": "Final Mask",
-                    "description": "Binary Mask",
-                    "elements": [
-                        {
-                            "type": "image",
-                            "girderId": "outputStainImageFile_1",
-                            "transform": {
-                                "xoffset": 0,
-                                "yoffset": 0,
-                            },
-                        }
-                    ],
-                }
-            ]
+            # annotation = [
+            #     {
+            #         "name": "Final Mask",
+            #         "description": "Binary Mask",
+            #         "elements": [
+            #             {
+            #                 "type": "image",
+            #                 "girderId": "outputStainImageFile_1",
+            #                 "transform": {
+            #                     "xoffset": 0,
+            #                     "yoffset": 0,
+            #                 },
+            #             }
+            #         ],
+            #     }
+            # ]
 
-            with open(outputAnnotationFile, "w") as annotation_file:
-                json.dump(annotation, annotation_file, indent=2, sort_keys=False)
+            # with open(outputAnnotationFile, "w") as annotation_file:
+            #     json.dump(annotation, annotation_file, indent=2, sort_keys=False)
 
             # gc.addMetadataToItem(slide_id, metadata_response_dict)
             # gc.upload(f"{tmpdir}/{slide_id}", parentId)
@@ -77,11 +75,15 @@ def process_image(tmp_directory, item_name, outputStainImageFile_1):
         )
 
         print(f"FINAL MASK SHAPE {final_mask.shape}")
+        print(f"FINAL MASK TYPE {type(final_mask)}")
 
-        imageio.imsave(f"{outputStainImageFile_1}.svs", final_mask[:, :, 0])
+        im = Image.fromarray(np.uint8(final_mask))
 
-        print(os.listdir())
-        print("SUCCESSFULLY SAVED")
+        im.save(f"{outputStainImageFile_1}")
+
+        path = os.path.dirname(f"{outputStainImageFile_1}")
+        print(os.listdir(path))
+        print("SUCCESSFULLY SAVED ")
 
         final_response = {
             "histoqc_metadata": {
@@ -94,8 +96,6 @@ def process_image(tmp_directory, item_name, outputStainImageFile_1):
     except Exception as Ex:
         print("Exception in processing", Ex)
         return {"histoqc_metadata": {"process": "failed"}}
-
-    return final_response
 
 
 def main(args):
@@ -118,6 +118,10 @@ def main(args):
     gc = girder_client.GirderClient(apiUrl=args.girderApiUrl)
     gc.authenticate(apiKey=args.girderApiKey)
     print("WE AUTHENTICATED")
+    path = os.path.dirname(f"{args.outputStainImageFile_1}")
+    print("IN MAIN MNT ", path)
+    print(os.listdir(path))
+
     query_slide(
         gc, args.inputImageFile, args.outputAnnotationFile, args.outputStainImageFile_1
     )

@@ -15,8 +15,7 @@ RUN pip install imageio
 RUN pip install large-image
 RUN pip install large-image-source-openslide
 RUN pip install scikit-image
-
-
+RUN pip install --upgrade Pillow
 
 
 COPY . $PWD
