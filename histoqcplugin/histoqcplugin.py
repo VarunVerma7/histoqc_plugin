@@ -9,6 +9,8 @@ from datetime import datetime
 import json
 import imageio
 from PIL import Image
+import requests
+import large_image
 
 
 def query_slide(gc, inputImageFile, outputAnnotationFile, outputStainImageFile_1):
@@ -36,26 +38,37 @@ def query_slide(gc, inputImageFile, outputAnnotationFile, outputStainImageFile_1
                 tmpdir, (name + extension), outputStainImageFile_1
             )
 
-            print(f"Meta Data response dictionary {metadata_response_dict}")
-            # annotation = [
-            #     {
-            #         "name": "Final Mask",
-            #         "description": "Binary Mask",
-            #         "elements": [
-            #             {
-            #                 "type": "image",
-            #                 "girderId": "outputStainImageFile_1",
-            #                 "transform": {
-            #                     "xoffset": 0,
-            #                     "yoffset": 0,
-            #                 },
-            #             }
-            #         ],
-            #     }
-            # ]
+            ts = large_image.getTileSource(inputImageFile)
 
-            # with open(outputAnnotationFile, "w") as annotation_file:
-            #     json.dump(annotation, annotation_file, indent=2, sort_keys=False)
+            ts_metadata = ts.getMetadata()
+            sizeX = ts_metadata["sizeX"]
+            sizeY = ts_metadata["sizeY"]
+
+            print(f"Meta Data response dictionary {metadata_response_dict}")
+            annotation = [
+                {
+                    "name": "Final Mask",
+                    "description": "Binary Mask",
+                    "elements": [
+                        {
+                            "type": "image",
+                            "girderId": "outputStainImageFile_1",
+                            "transform": {
+                                "xoffset": 0,
+                                "yoffset": 0,
+                                "matrix": [  # Affine matrix to specify transformations like scaling,
+                                    # rotation, or shearing.
+                                    [1 * sizeX, 0],
+                                    [0, 1 * sizeY],
+                                ],
+                            },
+                        }
+                    ],
+                }
+            ]
+
+            with open(outputAnnotationFile, "w") as annotation_file:
+                json.dump(annotation, annotation_file, indent=2, sort_keys=False)
 
             # gc.addMetadataToItem(slide_id, metadata_response_dict)
             # gc.upload(f"{tmpdir}/{slide_id}", parentId)
